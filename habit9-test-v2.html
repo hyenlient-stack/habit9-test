@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>단어 테스트</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      font-size: 16px;
+    }
+
+    .section {
+      display: none;
+      padding: 24px 20px 40px;
+      max-width: 600px;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+    .section.active { display: block; }
+
+    h1 { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+    h2 { font-size: 20px; font-weight: 700; color: #fff; }
+    .subtitle { font-size: 14px; color: #666; margin-bottom: 28px; line-height: 1.5; }
+
+    .btn {
+      display: block; width: 100%;
+      padding: 15px 20px;
+      border: none; border-radius: 14px;
+      font-size: 16px; font-weight: 600;
+      cursor: pointer; text-align: center;
+      margin-bottom: 12px; min-height: 50px;
+      transition: opacity .15s, transform .1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active { opacity: .85; transform: scale(.98); }
+    .btn:disabled { opacity: .35; cursor: not-allowed; transform: none !important; }
+    .btn-primary { background: #4f46e5; color: #fff; }
+    .btn-secondary { background: #1e1e30; color: #b0b0cc; border: 1px solid #2e2e45; }
+    .btn-sm {
+      width: auto; display: inline-block;
+      padding: 8px 14px; font-size: 13px;
+      margin-bottom: 0; min-height: 36px;
+    }
+
+    .top-bar {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 24px;
+    }
+    .btn-home {
+      background: none; border: 1px solid #2e2e45;
+      color: #777; padding: 8px 14px;
+      border-radius: 10px; font-size: 13px;
+      cursor: pointer; min-height: 36px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Capture ── */
+    .upload-zone {
+      border: 2px dashed #2e2e45; border-radius: 18px;
+      padding: 44px 20px; text-align: center;
+      cursor: pointer; margin-bottom: 20px;
+      background: #13131f;
+      transition: border-color .2s;
+    }
+    .upload-zone:hover, .upload-zone:active { border-color: #4f46e5; }
+    .upload-icon { font-size: 52px; margin-bottom: 12px; }
+    .upload-text { font-size: 15px; color: #777; line-height: 1.6; }
+    input[type="file"] { display: none; }
+
+    .thumbnails { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    .thumb-item { position: relative; width: 80px; height: 80px; }
+    .thumb-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+    .thumb-remove {
+      position: absolute; top: -6px; right: -6px;
+      background: #dc2626; color: #fff;
+      border: none; border-radius: 50%;
+      width: 22px; height: 22px;
+      font-size: 12px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Edit ── */
+    .progress-wrap { margin-bottom: 16px; }
+    .progress-label { font-size: 13px; color: #777; margin-bottom: 6px; }
+    .progress-bar { height: 8px; background: #1e1e30; border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #4f46e5; border-radius: 4px; transition: width .3s; width: 0%; }
+
+    .guide-box {
+      background: #13131f; border: 1px solid #2e2e45;
+      border-radius: 12px; padding: 14px 16px;
+      margin-bottom: 16px; font-size: 13px;
+      color: #8888aa; line-height: 1.7;
+    }
+    .guide-box strong { color: #b0b0cc; }
+    .guide-box code {
+      background: #1e1e30; padding: 2px 6px;
+      border-radius: 4px; color: #9b9bff;
+      font-size: 12px; font-family: monospace;
+    }
+
+    textarea {
+      width: 100%; background: #13131f;
+      border: 1px solid #2e2e45; border-radius: 14px;
+      color: #e0e0e0; font-size: 14px;
+      padding: 14px 16px; line-height: 1.7;
+      resize: vertical; font-family: 'Courier New', monospace;
+      margin-bottom: 12px; min-height: 280px;
+    }
+    textarea:focus { outline: none; border-color: #4f46e5; }
+
+    .row-btns { display: flex; gap: 10px; margin-bottom: 16px; }
+    .row-btns .btn { margin-bottom: 0; }
+
+    /* ── Setup ── */
+    .radio-option {
+      display: flex; align-items: center;
+      padding: 16px; background: #13131f;
+      border: 2px solid #2e2e45; border-radius: 14px;
+      margin-bottom: 12px; cursor: pointer;
+      transition: border-color .2s, background .2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .radio-option:has(input:checked) { border-color: #4f46e5; background: #1a1a35; }
+    .radio-option input[type="radio"] { margin-right: 14px; width: 20px; height: 20px; accent-color: #4f46e5; flex-shrink: 0; }
+    .radio-label { font-size: 16px; font-weight: 600; color: #e0e0e0; }
+    .radio-desc { font-size: 13px; color: #777; margin-top: 3px; }
+
+    #word-selector { display: none; margin-bottom: 20px; }
+    .ws-header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 10px;
+    }
+    .ws-header span { font-size: 14px; color: #888; font-weight: 600; }
+    .ws-btns { display: flex; gap: 8px; }
+
+    .checkbox-list {
+      background: #13131f; border: 1px solid #2e2e45;
+      border-radius: 14px; max-height: 220px;
+      overflow-y: auto; padding: 6px;
+    }
+    .checkbox-item {
+      display: flex; align-items: center;
+      padding: 11px 12px; border-radius: 10px;
+    }
+    .checkbox-item:hover { background: #1e1e30; }
+    .checkbox-item.disabled { opacity: .4; }
+    .checkbox-item input[type="checkbox"] { margin-right: 12px; width: 18px; height: 18px; accent-color: #4f46e5; flex-shrink: 0; }
+    .word-text { font-size: 15px; font-weight: 600; }
+    .no-ex { font-size: 12px; color: #555; margin-left: 8px; }
+
+    /* ── Test ── */
+    .quiz-header { margin-bottom: 16px; }
+    .quiz-prog-text {
+      font-size: 13px; color: #777;
+      text-align: right; margin-bottom: 6px;
+    }
+    .quiz-prog-bar { height: 4px; background: #1e1e30; border-radius: 2px; overflow: hidden; }
+    .quiz-prog-fill { height: 100%; background: #4f46e5; border-radius: 2px; transition: width .3s; }
+
+    .question-card {
+      background: #13131f; border: 1px solid #2e2e45;
+      border-radius: 18px; padding: 28px 20px;
+      margin-bottom: 20px; text-align: center;
+      min-height: 140px; display: flex;
+      flex-direction: column; justify-content: center;
+    }
+    .q-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #555; margin-bottom: 14px; }
+    .q-word { font-size: 34px; font-weight: 800; color: #fff; line-height: 1.2; word-break: break-word; }
+    .q-sub { font-size: 13px; color: #666; margin-top: 8px; }
+
+    .answer-input {
+      width: 100%; background: #13131f;
+      border: 2px solid #2e2e45; border-radius: 14px;
+      color: #e0e0e0; font-size: 16px;
+      padding: 15px 16px; margin-bottom: 12px;
+      transition: border-color .2s;
+    }
+    .answer-input:focus { outline: none; border-color: #4f46e5; }
+    .answer-input.correct { border-color: #10b981; background: #052e1622; }
+    .answer-input.wrong { border-color: #ef4444; background: #2a040422; }
+
+    .feedback-box {
+      padding: 16px; border-radius: 14px;
+      margin-bottom: 14px; font-size: 15px;
+      display: none; line-height: 1.6;
+    }
+    .feedback-box.correct { background: #052e16; color: #6ee7b7; border: 1px solid #065f46; }
+    .feedback-box.wrong { background: #2a0404; color: #fca5a5; border: 1px solid #7f1d1d; }
+    .feedback-ans { font-weight: 700; margin-top: 8px; color: #a7f3d0; word-break: break-word; }
+
+    /* ── Result ── */
+    .score-wrap { text-align: center; padding: 32px 20px 24px; }
+    .score-big { font-size: 72px; font-weight: 900; color: #fff; line-height: 1; }
+    .score-denom { font-size: 28px; color: #666; }
+    .score-sub { font-size: 20px; color: #888; margin-top: 10px; }
+
+    .res-section-title {
+      font-size: 13px; font-weight: 700; color: #666;
+      text-transform: uppercase; letter-spacing: .5px;
+      margin: 18px 0 8px;
+    }
+    .res-item {
+      background: #13131f; border-radius: 12px;
+      padding: 13px 16px; margin-bottom: 8px;
+    }
+    .res-item.correct { border-left: 3px solid #10b981; }
+    .res-item.wrong { border-left: 3px solid #ef4444; }
+    .res-q { font-size: 16px; font-weight: 700; margin-bottom: 5px; word-break: break-word; }
+    .res-a { font-size: 13px; line-height: 1.6; word-break: break-word; }
+    .res-a .your { color: #fca5a5; }
+    .res-a .ok { color: #6ee7b7; }
+    .res-a .arrow { color: #555; margin: 0 4px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ Section 1: Capture ═══ -->
+<div class="section active" id="section-capture">
+  <h1>📚 단어 테스트</h1>
+  <p class="subtitle">학원 단어 프린트물을 찍으면 바로 테스트를 만들어 드려요</p>
+
+  <label for="file-input">
+    <div class="upload-zone">
+      <div class="upload-icon">📷</div>
+      <div class="upload-text">여기를 눌러서<br>사진 찍기 또는 앨범에서 선택<br><small>(여러 장 가능)</small></div>
+    </div>
+  </label>
+  <input type="file" id="file-input" accept="image/*" multiple>
+
+  <div class="thumbnails" id="thumbnails"></div>
+
+  <button class="btn btn-primary" id="btn-extract" disabled>텍스트 추출하기</button>
+  <button class="btn btn-secondary" id="btn-manual">사진 없이 직접 입력</button>
+</div>
+
+<!-- ═══ Section 2: Edit ═══ -->
+<div class="section" id="section-edit">
+  <div class="top-bar">
+    <h2>단어 목록 편집</h2>
+    <button class="btn-home" onclick="resetAll()">처음으로</button>
+  </div>
+
+  <div class="progress-wrap" id="ocr-progress-wrap" style="display:none">
+    <div class="progress-label" id="ocr-label">OCR 처리 중...</div>
+    <div class="progress-bar"><div class="progress-fill" id="ocr-fill"></div></div>
+  </div>
+
+  <div class="guide-box">
+    📌 <strong>입력 형식</strong> — 한 줄에 단어 하나씩<br>
+    <code>단어 | 뜻 | 예문</code><br><br>
+    • 뜻이 여러 개면 쉼표로 구분 → 하나만 맞혀도 정답<br>
+    • 예문 속 정답 단어는 괄호로 감싸기:<br>
+    &nbsp;&nbsp;<code>The (widespread) use of smartphones...</code><br>
+    • 예문 없는 단어는 <code>단어 | 뜻</code>만 써도 됨
+  </div>
+
+  <textarea id="textarea-words"
+    placeholder="예시:
+widespread | adj. 널리 퍼진 | The (widespread) use of smartphones changed daily life.
+inspire | v. 영감을 주다 | Teachers (inspire) students to dream big.
+indulge | v. 탐닉하다 | She (indulged) in chocolate cake."></textarea>
+
+  <div class="row-btns">
+    <button class="btn btn-secondary" style="flex:1" onclick="addBlankLine()">빈 줄 추가</button>
+    <button class="btn btn-secondary" style="flex:1" onclick="clearAll()">모두 지우기</button>
+  </div>
+
+  <button class="btn btn-primary" id="btn-to-setup">테스트 설정으로 →</button>
+</div>
+
+<!-- ═══ Section 3: Setup ═══ -->
+<div class="section" id="section-setup">
+  <div class="top-bar">
+    <h2>테스트 설정</h2>
+    <button class="btn-home" onclick="resetAll()">처음으로</button>
+  </div>
+
+  <div class="radio-group" id="radio-group">
+    <label class="radio-option">
+      <input type="radio" name="quiz-mode" value="en-ko" checked>
+      <div>
+        <div class="radio-label">영단어 → 뜻</div>
+        <div class="radio-desc">영어 단어를 보고 한국어 뜻을 입력</div>
+      </div>
+    </label>
+    <label class="radio-option">
+      <input type="radio" name="quiz-mode" value="ko-en">
+      <div>
+        <div class="radio-label">뜻 → 영단어</div>
+        <div class="radio-desc">한국어 뜻을 보고 영어 단어를 입력</div>
+      </div>
+    </label>
+    <label class="radio-option" id="mode-example-label">
+      <input type="radio" name="quiz-mode" value="example" id="radio-example">
+      <div>
+        <div class="radio-label">영단어 → 예문</div>
+        <div class="radio-desc" id="example-desc">영어 단어를 보고 해당 예문 전체를 입력</div>
+      </div>
+    </label>
+  </div>
+
+  <div id="word-selector">
+    <div class="ws-header">
+      <span>예문 테스트할 단어 선택</span>
+      <div class="ws-btns">
+        <button class="btn btn-secondary btn-sm" onclick="selectAll(true)">전체 선택</button>
+        <button class="btn btn-secondary btn-sm" onclick="selectAll(false)">전체 해제</button>
+      </div>
+    </div>
+    <div class="checkbox-list" id="checkbox-list"></div>
+  </div>
+
+  <button class="btn btn-primary" id="btn-start">시험 시작!</button>
+</div>
+
+<!-- ═══ Section 4: Test ═══ -->
+<div class="section" id="section-test">
+  <div class="top-bar" style="margin-bottom:10px">
+    <div class="quiz-prog-text" id="prog-text">1 / 10</div>
+    <button class="btn-home" onclick="confirmExit()">처음으로</button>
+  </div>
+  <div class="quiz-prog-bar" style="margin-bottom:24px">
+    <div class="quiz-prog-fill" id="prog-fill"></div>
+  </div>
+
+  <div class="question-card">
+    <div class="q-label" id="q-label"></div>
+    <div class="q-word" id="q-word"></div>
+    <div class="q-sub" id="q-sub"></div>
+  </div>
+
+  <input type="text" class="answer-input" id="answer-input" placeholder="여기에 입력하세요...">
+  <div class="feedback-box" id="feedback-box"></div>
+  <button class="btn btn-primary" id="btn-submit">확인</button>
+  <button class="btn btn-secondary" id="btn-next" style="display:none">다음 문제 →</button>
+</div>
+
+<!-- ═══ Section 5: Result ═══ -->
+<div class="section" id="section-result">
+  <div class="top-bar">
+    <h2>결과</h2>
+    <button class="btn-home" onclick="resetAll()">처음으로</button>
+  </div>
+
+  <div class="score-wrap">
+    <div>
+      <span class="score-big" id="score-num">0</span><span class="score-denom" id="score-denom"> / 0</span>
+    </div>
+    <div class="score-sub" id="score-sub"></div>
+  </div>
+
+  <div id="result-list"></div>
+
+  <div style="margin-top:24px; display:flex; flex-direction:column; gap:12px;">
+    <button class="btn btn-primary" id="btn-retry">다시 시험 (같은 단어)</button>
+    <button class="btn btn-secondary" onclick="resetAll()">새 사진 찍기</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+'use strict';
+
+// ════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════
+let S = {
+  files: [],
+  words: [],      // [{word, meaning, example}]
+  mode: 'en-ko',
+  quizWords: [],  // words used in current quiz
+  quiz: [],       // [{label, question, acceptableAnswers, displayCorrect}]
+  curQ: 0,
+  results: []     // [{question, userAnswer, correctAnswer, isCorrect}]
+};
+
+// ════════════════════════════════════════════
+//  SECTION SWITCHING
+// ════════════════════════════════════════════
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function resetAll() {
+  S = { files: [], words: [], mode: 'en-ko', quizWords: [], quiz: [], curQ: 0, results: [] };
+  document.getElementById('thumbnails').innerHTML = '';
+  document.getElementById('textarea-words').value = '';
+  document.getElementById('file-input').value = '';
+  document.getElementById('btn-extract').disabled = true;
+  show('section-capture');
+}
+
+function confirmExit() {
+  if (confirm('시험을 그만두고 처음으로 돌아갈까요?')) resetAll();
+}
+
+// ════════════════════════════════════════════
+//  FILE UPLOAD
+// ════════════════════════════════════════════
+function handleFileSelect(e) {
+  const selected = Array.from(e.target.files || []);
+  if (!selected.length) return;
+  // 이름+크기 기준으로 중복 방지 (change/input 이벤트 이중 발생 대비)
+  selected.forEach(f => {
+    const dup = S.files.some(sf => sf.name === f.name && sf.size === f.size);
+    if (!dup) S.files.push(f);
+  });
+  renderThumbs();
+  document.getElementById('btn-extract').disabled = !S.files.length;
+}
+
+// iOS Safari에서 multiple file input의 change 이벤트가 누락되는 버그 대응
+const fileEl = document.getElementById('file-input');
+fileEl.addEventListener('change', handleFileSelect);
+fileEl.addEventListener('input', handleFileSelect);
+
+function renderThumbs() {
+  const el = document.getElementById('thumbnails');
+  el.innerHTML = '';
+  S.files.forEach((f, i) => {
+    const url = URL.createObjectURL(f);
+    const d = document.createElement('div');
+    d.className = 'thumb-item';
+    d.innerHTML = `<img src="${url}" alt="사진 ${i+1}">
+      <button class="thumb-remove" onclick="removeFile(${i})">✕</button>`;
+    el.appendChild(d);
+  });
+  document.getElementById('btn-extract').disabled = !S.files.length;
+}
+
+function removeFile(i) {
+  S.files.splice(i, 1);
+  renderThumbs();
+}
+
+document.getElementById('btn-extract').addEventListener('click', async () => {
+  show('section-edit');
+  await runOCR(S.files);
+});
+
+document.getElementById('btn-manual').addEventListener('click', () => {
+  show('section-edit');
+});
+
+// ════════════════════════════════════════════
+//  OCR
+// ════════════════════════════════════════════
+async function runOCR(files) {
+  const wrap = document.getElementById('ocr-progress-wrap');
+  const label = document.getElementById('ocr-label');
+  const fill = document.getElementById('ocr-fill');
+  wrap.style.display = 'block';
+  fill.style.width = '0%';
+
+  let worker;
+  try {
+    worker = await Tesseract.createWorker(['eng', 'kor'], 1, {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          const p = Math.round(m.progress * 100);
+          fill.style.width = p + '%';
+        }
+      }
+    });
+
+    let allLines = [];
+    for (let i = 0; i < files.length; i++) {
+      label.textContent = `이미지 ${i+1} / ${files.length} 처리 중...`;
+      fill.style.width = '0%';
+      const { data } = await worker.recognize(files[i]);
+      allLines.push(...extractLines(data));
+    }
+
+    await worker.terminate();
+
+    document.getElementById('textarea-words').value = allLines.join('\n');
+    label.textContent = '✅ OCR 완료! 아래 내용을 확인하고 수정하세요.';
+    fill.style.width = '100%';
+  } catch (err) {
+    if (worker) await worker.terminate().catch(() => {});
+    label.textContent = '❌ OCR 오류: ' + (err.message || err);
+    console.error(err);
+  }
+}
+
+function extractLines(data) {
+  // bounding box 기반 행 그룹핑
+  const words = (data.words || []).filter(w => w.text.trim().length > 0 && w.confidence > 20);
+  if (!words.length) return (data.text || '').split('\n').filter(l => l.trim());
+
+  const ROW_TOL = 18; // px
+  const rows = [];
+  for (const w of words) {
+    const cy = (w.bbox.y0 + w.bbox.y1) / 2;
+    let matched = false;
+    for (const row of rows) {
+      if (Math.abs(row.cy - cy) <= ROW_TOL) {
+        row.words.push(w);
+        row.cy = row.words.reduce((s, x) => s + (x.bbox.y0 + x.bbox.y1) / 2, 0) / row.words.length;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) rows.push({ cy, words: [w] });
+  }
+
+  rows.sort((a, b) => a.cy - b.cy);
+
+  const lineTexts = rows.map(row => {
+    row.words.sort((a, b) => a.bbox.x0 - b.bbox.x0);
+    return row.words.map(w => w.text).join(' ').trim();
+  }).filter(t => t.length > 1);
+
+  return heuristicGroup(lineTexts);
+}
+
+const KO_RE   = /[가-힣]/;
+const POS_RE  = /^(n|v|adj|adv|prep|conj|pron|int|det|num|art)\./i;
+const WORD_RE = /^[a-zA-Z\s\-']+$/;
+
+function classify(line) {
+  if (KO_RE.test(line)) return 'meaning';
+  if (POS_RE.test(line)) return 'meaning';
+  const ws = line.trim().split(/\s+/);
+  if (WORD_RE.test(line) && ws.length <= 3) return 'word';
+  if (ws.length >= 4) return 'example';
+  return 'other';
+}
+
+function heuristicGroup(lines) {
+  const items = lines.map(l => ({ type: classify(l), text: l.trim() })).filter(x => x.text);
+  const result = [];
+  let cur = null;
+
+  for (const item of items) {
+    if (item.type === 'word') {
+      if (cur) result.push(fmtEntry(cur));
+      cur = { word: item.text, meaning: '', example: '' };
+    } else if (item.type === 'meaning' && cur) {
+      cur.meaning = cur.meaning ? cur.meaning + ', ' + item.text : item.text;
+    } else if (item.type === 'example' && cur) {
+      cur.example = cur.example ? cur.example + ' ' + item.text : item.text;
+    }
+    // 'other' 라인은 주석으로 남김
+  }
+  if (cur) result.push(fmtEntry(cur));
+
+  // 파싱 결과가 너무 빈약하면 원문
+  const validCount = result.filter(r => !r.startsWith('#')).length;
+  if (validCount < 2) {
+    return lines.map(l => '# ' + l);
+  }
+  return result;
+}
+
+function fmtEntry(e) {
+  return [e.word.trim(), e.meaning.trim(), e.example.trim()].join(' | ');
+}
+
+// ════════════════════════════════════════════
+//  EDIT HELPERS
+// ════════════════════════════════════════════
+function addBlankLine() {
+  const ta = document.getElementById('textarea-words');
+  ta.value += '\n';
+  ta.focus();
+}
+
+function clearAll() {
+  if (confirm('모든 내용을 지울까요?')) {
+    document.getElementById('textarea-words').value = '';
+  }
+}
+
+// ════════════════════════════════════════════
+//  EDIT → SETUP
+// ════════════════════════════════════════════
+document.getElementById('btn-to-setup').addEventListener('click', () => {
+  const raw = document.getElementById('textarea-words').value;
+  const words = parseWords(raw);
+
+  if (!words.length) {
+    alert('단어를 최소 1개 이상 입력해주세요.\n형식: 단어 | 뜻 | 예문');
+    return;
+  }
+
+  S.words = autoWrapParens(words);
+  // 업데이트된 내용을 textarea에 반영
+  document.getElementById('textarea-words').value =
+    S.words.map(w => [w.word, w.meaning, w.example].filter(Boolean).join(' | ')).join('\n');
+
+  buildSetupUI();
+  show('section-setup');
+});
+
+function parseWords(raw) {
+  return raw.split('\n')
+    .map(l => l.trim())
+    .filter(l => l && !l.startsWith('#'))
+    .map(l => {
+      const [word = '', meaning = '', example = ''] = l.split('|').map(p => p.trim());
+      return { word, meaning, example };
+    })
+    .filter(w => w.word);
+}
+
+function autoWrapParens(words) {
+  return words.map(w => {
+    if (!w.example || /\([^)]+\)/.test(w.example)) return w;
+    const re = new RegExp('\\b(' + escRe(w.word) + ')\\b', 'gi');
+    const wrapped = w.example.replace(re, '($1)');
+    return wrapped !== w.example ? { ...w, example: wrapped } : w;
+  });
+}
+
+function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+// ════════════════════════════════════════════
+//  SETUP UI
+// ════════════════════════════════════════════
+function buildSetupUI() {
+  const withEx = S.words.filter(w => w.example && /\([^)]+\)/.test(w.example));
+  const exLabel = document.getElementById('mode-example-label');
+  const exInput = document.getElementById('radio-example');
+  const exDesc  = document.getElementById('example-desc');
+
+  if (!withEx.length) {
+    exLabel.style.opacity = '0.4';
+    exLabel.style.pointerEvents = 'none';
+    exInput.disabled = true;
+    exDesc.textContent = '예문이 없어서 사용 불가';
+    if (exInput.checked) {
+      document.querySelector('input[name="quiz-mode"][value="en-ko"]').checked = true;
+    }
+  } else {
+    exLabel.style.opacity = '';
+    exLabel.style.pointerEvents = '';
+    exInput.disabled = false;
+    exDesc.textContent = '영어 단어를 보고 해당 예문 전체를 입력';
+  }
+
+  // 체크박스 목록
+  const list = document.getElementById('checkbox-list');
+  list.innerHTML = '';
+  S.words.forEach((w, i) => {
+    const hasEx = w.example && /\([^)]+\)/.test(w.example);
+    const div = document.createElement('label');
+    div.className = 'checkbox-item' + (hasEx ? '' : ' disabled');
+    div.style.cursor = hasEx ? 'pointer' : 'default';
+    div.innerHTML = `
+      <input type="checkbox" id="cb${i}" value="${i}" ${hasEx ? 'checked' : 'disabled'}>
+      <span class="word-text">${escHtml(w.word)}</span>
+      ${hasEx ? '' : '<span class="no-ex">예문 없음</span>'}`;
+    list.appendChild(div);
+  });
+
+  document.querySelectorAll('input[name="quiz-mode"]').forEach(r =>
+    r.addEventListener('change', toggleWordSelector)
+  );
+  toggleWordSelector();
+}
+
+function toggleWordSelector() {
+  const mode = document.querySelector('input[name="quiz-mode"]:checked')?.value;
+  document.getElementById('word-selector').style.display = mode === 'example' ? 'block' : 'none';
+}
+
+function selectAll(on) {
+  document.querySelectorAll('#checkbox-list input:not(:disabled)').forEach(cb => cb.checked = on);
+}
+
+// ════════════════════════════════════════════
+//  START QUIZ
+// ════════════════════════════════════════════
+document.getElementById('btn-start').addEventListener('click', () => {
+  const mode = document.querySelector('input[name="quiz-mode"]:checked')?.value || 'en-ko';
+  S.mode = mode;
+
+  let words;
+  if (mode === 'example') {
+    const idxs = Array.from(document.querySelectorAll('#checkbox-list input:checked'))
+      .map(cb => parseInt(cb.value));
+    if (!idxs.length) { alert('단어를 최소 1개 선택해주세요.'); return; }
+    words = idxs.map(i => S.words[i]);
+  } else {
+    words = S.words;
+  }
+
+  S.quizWords = words;
+  S.quiz = buildQuiz(mode, words);
+  S.curQ = 0;
+  S.results = [];
+
+  show('section-test');
+  renderQ();
+});
+
+// ════════════════════════════════════════════
+//  QUIZ BUILDER
+// ════════════════════════════════════════════
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const POS_STRIP = /^\s*(n|v|adj|adv|prep|conj|pron|int|det|num|art)\.?\s*/gi;
+
+function norm(s) {
+  return s.trim().replace(/\s+/g, ' ').toLowerCase().normalize('NFC');
+}
+
+function stripPos(s) {
+  // 반복 strip (여러 품사가 중첩될 수 있음)
+  let r = s;
+  let prev;
+  do { prev = r; r = r.replace(POS_STRIP, ''); } while (r !== prev);
+  return r.trim();
+}
+
+function buildAcceptable(mode, w) {
+  if (mode === 'en-ko') {
+    const raw = [w.meaning, ...w.meaning.split(',').map(s => s.trim())].filter(Boolean);
+    const all = raw.flatMap(s => [s, stripPos(s)]);
+    return [...new Set(all.map(s => norm(s)).filter(Boolean))];
+  }
+  if (mode === 'ko-en') return [norm(w.word)];
+  if (mode === 'example') {
+    return [norm(w.example.replace(/\(([^)]+)\)/g, '$1'))];
+  }
+  return [];
+}
+
+function buildQuiz(mode, words) {
+  return shuffle(words).map(w => {
+    const acc = buildAcceptable(mode, w);
+    if (mode === 'en-ko') {
+      return { label: '이 단어의 뜻은?', question: w.word, acceptableAnswers: acc, displayCorrect: w.meaning };
+    }
+    if (mode === 'ko-en') {
+      return { label: '이 뜻의 영단어는?', question: w.meaning, acceptableAnswers: acc, displayCorrect: w.word };
+    }
+    // example
+    return { label: '이 단어의 예문을 영어로 쓰세요', question: w.word, acceptableAnswers: acc,
+      displayCorrect: w.example.replace(/\(([^)]+)\)/g, '$1') };
+  }).filter(q => q.acceptableAnswers.length > 0);
+}
+
+// ════════════════════════════════════════════
+//  TEST UI
+// ════════════════════════════════════════════
+function renderQ() {
+  const q = S.quiz[S.curQ];
+  const total = S.quiz.length;
+  const cur = S.curQ + 1;
+
+  document.getElementById('prog-text').textContent = `${cur} / ${total}`;
+  document.getElementById('prog-fill').style.width = ((S.curQ / total) * 100) + '%';
+  document.getElementById('q-label').textContent = q.label;
+  document.getElementById('q-word').textContent = q.question;
+  document.getElementById('q-sub').textContent = '';
+
+  const inp = document.getElementById('answer-input');
+  inp.value = '';
+  inp.className = 'answer-input';
+  inp.disabled = false;
+  inp.placeholder = '여기에 입력하세요...';
+
+  document.getElementById('feedback-box').style.display = 'none';
+  document.getElementById('feedback-box').className = 'feedback-box';
+  document.getElementById('btn-submit').style.display = 'block';
+  document.getElementById('btn-next').style.display = 'none';
+
+  // 약간 지연 후 포커스 (섹션 전환 애니 고려)
+  setTimeout(() => inp.focus(), 100);
+}
+
+document.getElementById('btn-submit').addEventListener('click', submitAns);
+
+document.getElementById('answer-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.isComposing && document.getElementById('btn-submit').style.display !== 'none') {
+    e.preventDefault();
+    submitAns();
+  }
+});
+
+function submitAns() {
+  const q = S.quiz[S.curQ];
+  const userRaw = document.getElementById('answer-input').value;
+  const userNorm = norm(userRaw);
+  // 영단어→뜻 모드에서는 품사 제거한 버전도 비교
+  const userStripped = S.mode === 'en-ko' ? norm(stripPos(userRaw)) : userNorm;
+
+  const isCorrect = q.acceptableAnswers.some(a => a === userNorm || a === userStripped);
+
+  S.results.push({ question: q.question, userAnswer: userRaw, correctAnswer: q.displayCorrect, isCorrect });
+
+  const inp = document.getElementById('answer-input');
+  inp.disabled = true;
+  inp.className = 'answer-input ' + (isCorrect ? 'correct' : 'wrong');
+
+  const fb = document.getElementById('feedback-box');
+  fb.style.display = 'block';
+  fb.className = 'feedback-box ' + (isCorrect ? 'correct' : 'wrong');
+  if (isCorrect) {
+    fb.innerHTML = '✅ 정답!';
+  } else {
+    fb.innerHTML = `❌ 틀렸습니다.<div class="feedback-ans">정답: ${escHtml(q.displayCorrect)}</div>`;
+  }
+
+  document.getElementById('btn-submit').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'block';
+}
+
+document.getElementById('btn-next').addEventListener('click', () => {
+  S.curQ++;
+  if (S.curQ >= S.quiz.length) showResult();
+  else renderQ();
+});
+
+// ════════════════════════════════════════════
+//  RESULT
+// ════════════════════════════════════════════
+function showResult() {
+  const res = S.results;
+  const correct = res.filter(r => r.isCorrect).length;
+  const total = res.length;
+  const pct = total ? Math.round(correct / total * 100) : 0;
+  const emoji = pct >= 90 ? '🎉' : pct >= 70 ? '👍' : pct >= 50 ? '💪' : '📚 다시 도전!';
+
+  document.getElementById('score-num').textContent = correct;
+  document.getElementById('score-denom').textContent = ` / ${total}`;
+  document.getElementById('score-sub').textContent = `${pct}점 ${emoji}`;
+
+  const list = document.getElementById('result-list');
+  list.innerHTML = '';
+
+  const wrongs = res.filter(r => !r.isCorrect);
+  const rights = res.filter(r => r.isCorrect);
+
+  if (wrongs.length) {
+    list.appendChild(sectionTitle(`❌ 틀린 문제 (${wrongs.length})`));
+    wrongs.forEach(r => list.appendChild(makeResItem(r)));
+  }
+  if (rights.length) {
+    list.appendChild(sectionTitle(`✅ 맞은 문제 (${rights.length})`));
+    rights.forEach(r => list.appendChild(makeResItem(r)));
+  }
+
+  document.getElementById('btn-retry').onclick = () => {
+    S.quiz = buildQuiz(S.mode, S.quizWords);
+    S.curQ = 0;
+    S.results = [];
+    show('section-test');
+    renderQ();
+  };
+
+  show('section-result');
+}
+
+function sectionTitle(text) {
+  const d = document.createElement('div');
+  d.className = 'res-section-title';
+  d.textContent = text;
+  return d;
+}
+
+function makeResItem(r) {
+  const d = document.createElement('div');
+  d.className = 'res-item ' + (r.isCorrect ? 'correct' : 'wrong');
+  d.innerHTML = `<div class="res-q">${escHtml(r.question)}</div>
+    <div class="res-a">
+      ${r.isCorrect
+        ? `<span class="ok">내 답: ${escHtml(r.userAnswer)}</span>`
+        : `<span class="your">내 답: ${escHtml(r.userAnswer || '(미입력)')}</span>
+           <span class="arrow">→</span>
+           <span class="ok">정답: ${escHtml(r.correctAnswer)}</span>`}
+    </div>`;
+  return d;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
