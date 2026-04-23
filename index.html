@@ -368,6 +368,19 @@
     </div>
   </div>
 
+  <!-- 저장된 단어 배너 -->
+  <div class="banner" id="banner-saved" style="display:none;margin-top:16px;background:#0d1f0d;border:1px solid #1a4d1a;color:#6ee7b7">
+    <span>💾</span>
+    <div style="flex:1">
+      <strong id="saved-count-label">저장된 단어 N개</strong><br>
+      <small style="color:#4ade80">마지막으로 편집한 단어 목록을 바로 불러올 수 있어요</small>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+      <button class="banner-btn" onclick="loadSavedWords()" style="color:#6ee7b7">불러오기 →</button>
+      <button class="banner-btn" onclick="deleteSavedWords()" style="color:#555;font-weight:400">삭제</button>
+    </div>
+  </div>
+
   <div style="margin-top:16px">
     <label for="file-input">
       <div class="upload-zone">
@@ -535,6 +548,52 @@ let S = {
 };
 
 // ════════════════════════════════════════════
+//  SAVED WORDS (localStorage 영구 저장)
+// ════════════════════════════════════════════
+const WORDS_KEY = 'savedWords';
+
+function persistWords() {
+  if (S.words.length) localStorage.setItem(WORDS_KEY, JSON.stringify(S.words));
+}
+
+function getSavedWords() {
+  try { return JSON.parse(localStorage.getItem(WORDS_KEY)) || null; } catch { return null; }
+}
+
+function loadSavedWords() {
+  const saved = getSavedWords();
+  if (!saved || !saved.length) return;
+  S.words = saved;
+  showEditContent();
+  renderCards();
+  show('section-edit');
+}
+
+function deleteSavedWords() {
+  if (!confirm('저장된 단어 목록을 삭제할까요?')) return;
+  localStorage.removeItem(WORDS_KEY);
+  document.getElementById('banner-saved').style.display = 'none';
+}
+
+function updateSavedBanner() {
+  const saved = getSavedWords();
+  const banner = document.getElementById('banner-saved');
+  if (saved && saved.length) {
+    document.getElementById('saved-count-label').textContent = `저장된 단어 ${saved.length}개`;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+// 카드 편집 시 자동 저장 (디바운스 1초)
+let _saveTimer = null;
+function debouncedSave() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(persistWords, 1000);
+}
+
+// ════════════════════════════════════════════
 //  API KEY
 // ════════════════════════════════════════════
 const KEY_NAME = 'geminiApiKey';
@@ -548,6 +607,7 @@ function updateKeyUI() {
   document.getElementById('banner-no-key').style.display = hasKey ? 'none' : 'flex';
   const extractBtn = document.getElementById('btn-extract');
   extractBtn.disabled = !hasKey || !S.files.length;
+  updateSavedBanner();
 }
 
 // Modal
@@ -770,6 +830,7 @@ async function runGeminiOCR(files, apiKey) {
       example: String(item.example || '').trim()
     })).filter(w => w.word);
 
+    persistWords();
     loadBox.style.display = 'none';
     showEditContent();
     renderCards();
@@ -851,6 +912,7 @@ function onCardInput(e) {
   const field = e.target.dataset.field;
   S.words[idx][field] = e.target.value;
   updateEmptyState();
+  debouncedSave();
 }
 
 function addCard() {
@@ -873,6 +935,7 @@ function addCard() {
 function removeCard(i) {
   S.words.splice(i, 1);
   renderCards();
+  persistWords();
 }
 
 function clearCards() {
@@ -899,7 +962,7 @@ document.getElementById('btn-to-setup').addEventListener('click', () => {
   }
 
   S.words = autoWrapParens(words);
-  // 카드 UI에 반영
+  persistWords();
   renderCards();
 
   buildSetupUI();
