@@ -553,7 +553,8 @@ let S = {
 const WORDS_KEY = 'savedWords';
 
 function persistWords() {
-  if (S.words.length) localStorage.setItem(WORDS_KEY, JSON.stringify(S.words));
+  const valid = S.words.filter(w => w.word.trim());
+  if (valid.length) localStorage.setItem(WORDS_KEY, JSON.stringify(S.words));
 }
 
 function getSavedWords() {
