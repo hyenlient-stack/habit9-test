@@ -795,10 +795,18 @@ async function runGeminiOCR(files, apiKey) {
       }
     };
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-    );
+    let res;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      );
+      if (res.status !== 503) break;
+      if (attempt < 3) {
+        document.querySelector('.loading-label').textContent = `서버 혼잡 중… 재시도 ${attempt}/3`;
+        await new Promise(r => setTimeout(r, attempt * 3000));
+      }
+    }
 
     if (!res.ok) {
       const errBody = await res.json().catch(() => ({}));
@@ -808,6 +816,9 @@ async function runGeminiOCR(files, apiKey) {
       }
       if (res.status === 429) {
         throw new Error('하루 무료 한도를 초과했습니다. 내일 다시 시도하거나 직접 입력하세요.');
+      }
+      if (res.status === 503) {
+        throw new Error('Gemini 서버가 일시적으로 혼잡합니다. 잠시 후 다시 시도해주세요.');
       }
       throw new Error(`Gemini 오류 (${res.status}): ${msg}`);
     }
